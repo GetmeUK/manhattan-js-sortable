@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <title>manhattan-typeahead</title>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="http://localhost:5999/typeahead.css"
+            >
+        <style>
+            body {
+                background: #eee;
+            }
+
+            #languages {
+                background: #fff;
+                margin: 100px 0 0 100px;
+                padding: 5px 0;
+                width: 200px;
+            }
+
+            #languages li {
+                font-family: sans-serif;
+                list-style: none;
+                margin: 0;
+                padding: 5px 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <ul
+            id="languages"
+            data-mh-sortable
+            >
+            <li>Ada</li>
+            <li>Java</li>
+            <li>JavaScript</li>
+            <li>Brainfuck</li>
+            <li>LOLCODE</li>
+            <li>Node.js</li>
+            <li>Ruby on Rails</li>
+        </ul>
+
+        <script src="http://localhost:5999/index.js"></script>
+        <script>
+            var list = document.getElementById('languages');
+            sortable = new ManhattanSortable.Sortable(list);
+        </script>
+    </body>
+</html>
