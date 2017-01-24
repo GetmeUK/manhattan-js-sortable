@@ -40,6 +40,7 @@ class Sortable
         $.config(
             @_behaviours,
             {
+                before: 'auto',
                 children: 'children',
                 grabber: 'self',
                 helper: 'clone'
@@ -75,7 +76,7 @@ class Sortable
         children = @constructor.behaviours.children[@_behaviours.children]
         @_dom.children = children(this)
 
-        # Handle interactions with the container
+        # Handle interactions with sortable items
         $.listen document,
 
             # Mouse events
@@ -92,6 +93,25 @@ class Sortable
 
     destroy: () ->
         # Remove the sortable behaviour from the container
+
+        # Remove the sortable class from the container
+        @container.classList.remove(@_bem('sortable'))
+
+        # Remove event handlers
+        $.ignore document,
+
+            # Mouse events
+            'mousedown': @_grab,
+            'mousemove': @_drag,
+            'mouseup': @_drop,
+
+            # Touch events
+            'touchstart': @_grab,
+            'touchmove': @_drag,
+            'touchend': @_drop
+
+        # Remove the sortable reference from the container
+        delete @_dom.container.__mh_sortable
 
     # Private methods
 
@@ -151,20 +171,11 @@ class Sortable
         if not sibling
             return
 
-        # Determine if the pointer is in the top or bottom half of the
-        # element we have moused over.
-        rect = sibling.getBoundingClientRect()
-        overlap = [pos[0] - rect.left, pos[1] - rect.top]
-
-        above = null
-        if @axis is 'vertical'
-            above = overlap[1] < (rect.height / 2)
-        else
-            above = overlap[0] < (rect.width / 2)
-
         # Move the grabbed element into its new position
+        before = @constructor.behaviours.before[@_behaviours.before]
+        before = before(this, sibling, pos)
         @container.removeChild(@_grabbed)
-        if not above
+        if before
             sibling = sibling.nextElementSibling
         @container.insertBefore(@_grabbed, sibling)
 
@@ -253,6 +264,48 @@ class Sortable
 
     @behaviours:
 
+        # The `before` behaviour is used to determine if the grabbed element
+        # should be placed before or after a given sibling element.
+        before:
+            'auto': (sortable, sibling, pos) ->
+                # Attempt to detect the correct axis to use based on the width
+                # of child elements and the container, then call the 'axis'
+                # behaviour to obtain a result.
+
+                # Has the container width changed since we last called this
+                # behaviour?
+                width = sortable.container.getBoundingClientRect().width
+                unless @_containerWidth is width
+
+                    # Width has changed, attempt to detect the correct axis
+                    sortable.axis = 'vertical'
+
+                    # Check if any child has the same top position, if so
+                    # switch to a horizontal axis.
+                    topTable = {}
+                    for child in sortable._dom.children
+                        top = child.getBoundingClientRect().top
+                        if topTable[top]
+                            sortable.axis = 'horizontal'
+                            break
+                        topTable[top] = true
+
+                    # Store new container width
+                    @_containerWidth = width
+
+                axis = sortable.constructor.behaviours.before['axis']
+                return axis(sortable, sibling, pos)
+
+            'axis': (sortable, sibling, pos) ->
+                # Determine if the element should be inserted before or after
+                # based on the position being in one half or the other of the
+                # sibling element.
+                rect = sibling.getBoundingClientRect()
+                overlap = [pos[0] - rect.left, pos[1] - rect.top]
+                if sortable.axis is 'vertical'
+                    return overlap[1] > (rect.height / 2)
+                return overlap[0] > (rect.width / 2)
+
         # The `children` behaviour is used to select the elements within the
         # `container` that will be sortable. Must return a list of DOM elements.
         children:
@@ -310,3 +363,5 @@ class Sortable
 
 
 module.exports = {Sortable: Sortable}
+
+# Position behaviour (autoaxis, axis by default)
