@@ -14,10 +14,15 @@ class Sortable
         $.config(
             this,
             {
+                # The axis used to determine the placement of a grabbed element
+                # when placed over a sibling. Must be 'vertical' (top/bottom) or
+                # 'horizontal' (left/right).
+                axis: 'vertical',
+
                 # User in conjunction with the `handle > children` behaviour to
                 # specify a CSS selector for the sortable children within the
                 # container.
-                childSelector: null
+                childSelector: null,
 
                 # Used in conjuction with the `handle > grabber` behaviour to
                 # specify a CSS selector for the grabber element within a
@@ -36,7 +41,8 @@ class Sortable
             @_behaviours,
             {
                 children: 'children',
-                grabber: 'self'
+                grabber: 'self',
+                helper: 'clone'
             },
             options,
             container,
@@ -45,6 +51,10 @@ class Sortable
 
         # The element that is currently being sorted
         @_grabbed = null
+
+        # The offset at which the grabbed element was grabbed which is used to
+        # allow the the helper to stay relative to the pointer.
+        @_grabbedOffset = null
 
         # Domain for related DOM elements
         @_dom = {}
@@ -55,6 +65,9 @@ class Sortable
         @_dom.container = container
         @_dom.container.__mh_sortable = this
 
+        # Add a sortable class to the container
+        @_dom.container.classList.add(@_bem('sortable'))
+
         # Define read-only properties
         Object.defineProperty(this, 'container', {value: @_dom.container})
 
@@ -63,7 +76,7 @@ class Sortable
         @_dom.children = children(this)
 
         # Handle interactions with the container
-        $.listen @container,
+        $.listen document,
 
             # Mouse events
             'mousedown': @_grab,
@@ -97,6 +110,12 @@ class Sortable
         # Generate an event type name
         return "mh-sortable--#{eventName}"
 
+    _getEventPos: (ev) ->
+        # Return the `[x, y]` coordinates for an event
+        if (ev.touches)
+            ev = ev.touches[0]
+        return [ev.pageX - window.pageXOffset, ev.pageY - window.pageYOffset]
+
     # Sort event handlers.
     #
     # NOTE: Fat arrows are used for these methods as they require the parent
@@ -109,13 +128,82 @@ class Sortable
         if not @_grabbed
             return
 
-        ev.preventDefault()
+        # Get the position of the pointer
+        pos = @_getEventPos(ev)
+
+        # Move the helper inline with the pointer
+        @_dom.helper.style.left = "#{pos[0] - @_grabbedOffset[0]}px"
+        @_dom.helper.style.top = "#{pos[1] - @_grabbedOffset[1]}px"
+
+        # Is the pointer over sibling of the grabbed element?
+        target = document.elementFromPoint(pos[0], pos[1])
+        sibling = null
+        for child in @_dom.children
+
+            # Ignore the currently grabbed item
+            if child is @_grabbed
+                continue
+
+            if child.contains(target)
+                sibling = child
+                break
+
+        if not sibling
+            return
+
+        # Determine if the pointer is in the top or bottom half of the
+        # element we have moused over.
+        rect = sibling.getBoundingClientRect()
+        overlap = [pos[0] - rect.left, pos[1] - rect.top]
+
+        above = null
+        if @axis is 'vertical'
+            above = overlap[1] < (rect.height / 2)
+        else
+            above = overlap[0] < (rect.width / 2)
+
+        # Move the grabbed element into its new position
+        @container.removeChild(@_grabbed)
+        if not above
+            sibling = sibling.nextElementSibling
+        @container.insertBefore(@_grabbed, sibling)
+
+        # Update the list of sortable children
+        children = @constructor.behaviours.children[@_behaviours.children]
+        @_dom.children = children(this)
+
+        # Dispatch a sort event
+        $.dispatch(@container, @_et('sort'), {'children': @_dom.children})
 
     _drop: (ev) =>
-        @todo = 'todo'
+        # Handle the grabbed element being dropped into a new position
+
+        # We only handle this event if a sortable child has been grabbed
+        if not @_grabbed
+            return
+
+        # Remove the ghost class from the grabbed element
+        @_grabbed.classList.remove(@_bem('sortable-ghost'))
+        @_grabbed = null
+        @_grabbedOffset = null
+
+        # Remove the helper element
+        document.body.removeChild(@_dom.helper)
+        @_dom.helper = null
+
+        # Remove the sorting class from the container
+        @container.classList.remove(@_bem('sortable', null, 'sorting'))
+
+        # Dispatch a sorted event
+        $.dispatch(@container, @_et('sorted'), {'children': @_dom.children})
 
     _grab: (ev) =>
         # Handle the grabbing of an element to sort
+
+        # If this is a mouse down event then we check that the user pressed the
+        # primary mouse button (left).
+        if event.type.toLowerCase() is 'mousedown' and not (event.which is 1)
+            return
 
         # Determine if the target of the event relates to the grabber for a
         # sortable child.
@@ -134,14 +222,31 @@ class Sortable
             # Store grabbed child
             @_grabbed = grabbed
 
-            # @@ START HERE
+            # Get x, y for event
+            pos = @_getEventPos(ev)
 
-            # @@ Create a helper to represent the grabbed child being dragged
+            # Store the offset at which we grabbed the child
+            rect = @_grabbed.getBoundingClientRect()
+            @_grabbedOffset = [pos[0] - rect.left, pos[1] - rect.top]
 
-            # @@ Apply the ghost class to the grabbed child to change it's
-            # appearance within the list.
+            # Create a helper to represent the grabbed child being dragged
+            helper = @constructor.behaviours.helper[@_behaviours.helper]
+            @_dom.helper = helper(this, @_grabbed)
+            document.body.appendChild(@_dom.helper)
 
-            # Trigger grabbed event
+            # Move the helper inline with the pointer
+            @_dom.helper.style.left = "#{pos[0] - @_grabbedOffset[0]}px"
+            @_dom.helper.style.top = "#{pos[1] - @_grabbedOffset[1]}px"
+
+            # Add the ghost class to the grabbed child to change its appearance
+            # within the list.
+            @_grabbed.classList.add(@_bem('sortable-ghost'))
+
+            # Add a class to the container to indicate that the user is sorting
+            # the list.
+            @container.classList.add(@_bem('sortable', null, 'sorting'))
+
+            # Dispatch grabbed event
             $.dispatch(@container, @_et('grabbed'), {'target': grabbed})
 
     # Behaviours
@@ -161,9 +266,9 @@ class Sortable
                 # Select child elements using a CSS selector
                 return $.many(sortable.childSelector, sortable.container)
 
+        # The `grabber` behaviour is used to determine what part of a child
+        # element is used to grab it when sorting.
         grabber:
-            # The `grabber` behaviour is used to determine what part of a child
-            # element is used to grab it when sorting.
             'selector': (sortable, elm) ->
                 # Select grabber element using a CSS selector
                 return $.many(sortable.grabSelector, elm)
@@ -172,30 +277,36 @@ class Sortable
                 # Return the element itself
                 return elm
 
+        # The `helper` behaviour is used to generate a helper DOM element that
+        # the user drags to position the related sortable child into a new
+        # position.
+
+        helper:
+            'clone': (sortable, elm) ->
+                # Returns a cloned version of the element
+
+                # Clone the node
+                cloned = elm.cloneNode(true)
+
+                # Remove any `id` or `name` attribute to prevent unwanted
+                # duplicates.
+                cloned.removeAttribute('id')
+                cloned.removeAttribute('name')
+
+                # Copy CSS styles of the to the cloned element
+                css = document.defaultView.getComputedStyle(elm, '').cssText
+                cloned.style.cssText = css
+
+                # Set the position of the helper element to be absolute
+                cloned.style.position = 'absolute'
+
+                # Prevent the capture of pointer events
+                cloned.style['pointer-events'] = 'none'
+
+                # Add a helper class to the clone
+                cloned.classList.add(sortable._bem('sortable-helper'))
+
+                return cloned
+
 
 module.exports = {Sortable: Sortable}
-
-
-# Config
-#
-# ghost class
-# grabbed class
-
-# behaviours
-#
-# - helper (clone): how to generate a clone of the element being sorted
-
-# events
-#
-# - change (when the order of elements is changed)
-
-# Process
-#
-#   -> grab (click or touch)
-#   -> pick up (drag)
-#   -> move (move to another location in the list)
-#   -> drop
-
-# TODO:
-#
-# - Prevent text selection

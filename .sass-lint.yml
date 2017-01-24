@@ -76,7 +76,7 @@ rules:
   no-css-comments:
     - 0
   no-duplicate-properties:
-    - 2
+    - 0
   no-empty-rulesets:
     - 2
   no-important:
