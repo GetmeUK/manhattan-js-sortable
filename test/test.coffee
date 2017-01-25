@@ -157,18 +157,62 @@ describe 'Sortable (options)', ->
 
     describe 'childSelector', ->
 
-        describe 'when even items only', ->
+        describe 'when :nth-child(even)', ->
 
-            # @@
+            it 'should return only even children', ->
+
+                sortable.childSelector = ':nth-child(even)'
+
+                children = Sortable.behaviours.children.selector(sortable)
+                children.should.deep.equal [
+                    listItems[1],
+                    listItems[3],
+                    listItems[5],
+                    listItems[7]
+                    ]
 
     describe 'grabSelector', ->
 
         describe 'when .grab', ->
 
-            # @@
+            it 'should return the element within the child with with the grab
+                class', ->
+
+                grabber = $.create('span', {'class': 'grab'})
+                li = listItems[0]
+                li.appendChild(grabber)
+                sortable.grabSelector = '.grab'
+
+                children = Sortable.behaviours.grabber.selector(sortable, li)
+                children.should.equal grabber
 
 
 describe 'Sortable (behaviors)', ->
+
+    jsdom()
+
+    list = null
+    listItems = null
+    sortable = null
+
+    beforeEach ->
+        # Build a list to sort
+        list = $.create('ul', {'data-mh-sortable': true})
+        listItems = []
+        for language in languages
+            listItem = $.create('ul', {})
+            listItem.innerText = language
+            listItems.push(listItem)
+            list.appendChild(listItem)
+
+        document.body.appendChild(list)
+
+        # Make the list sortable
+        sortable = new Sortable(list)
+
+    afterEach ->
+        sortable.destroy()
+        document.body.removeChild(list)
 
     describe 'before', ->
 
@@ -184,24 +228,66 @@ describe 'Sortable (behaviors)', ->
 
         describe 'children', ->
 
-            # @@
+            it 'should return a list of the containers direct decendents', ->
+
+                children = Sortable.behaviours.children.children(sortable)
+                children.should.deep.equal listItems
 
         describe 'selector', ->
 
-            # @@
+            it 'should return a list of the containers decendents based on the
+                `childSelector` option', ->
+
+                sortable.childSelector = ':nth-child(even)'
+
+                children = Sortable.behaviours.children.selector(sortable)
+                children.should.deep.equal [
+                    listItems[1],
+                    listItems[3],
+                    listItems[5],
+                    listItems[7]
+                    ]
 
     describe 'grabber', ->
 
         describe 'selector', ->
 
-            # @@
+            it 'should return a child from the element based on the
+                `grabSelector` option', ->
+
+                grabber = $.create('span', {'class': 'grab'})
+                li = listItems[0]
+                li.appendChild(grabber)
+                sortable.grabSelector = '.grab'
+
+                children = Sortable.behaviours.grabber.selector(sortable, li)
+                children.should.equal grabber
 
         describe 'self', ->
 
-            # @@
+            it 'should return the element passed', ->
+
+                li = listItems[0]
+                Sortable.behaviours.grabber.self(sortable, li).should.equal li
 
     describe 'helper', ->
 
         describe 'clone', ->
 
-            # @@
+            it 'should return a clone of the element', ->
+
+                li = listItems[0]
+                clone = Sortable.behaviours.helper.clone(sortable, li)
+
+                # Check it's a clone
+                clone.tagName.should.equal li.tagName
+                clone.innerHTML.should.equal li.innerHTML
+
+                # Check the various helper styles and classes have been set
+                clone.style.position.should.equal 'absolute'
+
+                # Prevent the capture of pointer events
+                clone.style['pointer-events'].should.equal 'none'
+
+                # Add a helper class to the clone
+                clone.classList.contains('mh-sortable-helper').should.be.true

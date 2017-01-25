@@ -90,7 +90,7 @@ module.exports = {
             {
                 test: /\.scss$/,
                 loaders: [
-                    'file?name=typeahead.css',
+                    'file?name=sortable.css',
                     'extract',
                     'css',
                     'sass'

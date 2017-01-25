@@ -1,11 +1,11 @@
 <!DOCTYPE HTML>
 <html lang="en">
     <head>
-        <title>manhattan-typeahead</title>
+        <title>manhattan-sortable</title>
         <link
             rel="stylesheet"
             type="text/css"
-            href="http://localhost:5999/typeahead.css"
+            href="http://localhost:5999/sortable.css"
             >
         <style>
             body {
@@ -70,16 +70,17 @@
         <ul
             id="users"
             data-mh-sortable
-            data-mh-sortable--axis="horizontal"
+            data-mh-sortable--grabber="selector"
+            data-mh-sortable--grab-selector=".grab"
             >
-            <li>Al</li>
-            <li>Andy</li>
-            <li>Ant</li>
-            <li>David</li>
-            <li>John</li>
-            <li>Jon</li>
-            <li>Rich</li>
-            <li>Ross</li>
+            <li><span class="grab">grab</span><br>Al</li>
+            <li><span class="grab">grab</span><br>Andy</li>
+            <li><span class="grab">grab</span><br>Ant</li>
+            <li><span class="grab">grab</span><br>avid</li>
+            <li><span class="grab">grab</span><br>John</li>
+            <li><span class="grab">grab</span><br>Jon</li>
+            <li><span class="grab">grab</span><br>Rich</li>
+            <li><span class="grab">grab</span><br>Ross</li>
         </ul>
 
         <script src="http://localhost:5999/index.js"></script>

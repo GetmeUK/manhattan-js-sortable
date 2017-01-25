@@ -194,7 +194,7 @@ class Sortable
             return
 
         # Remove the ghost class from the grabbed element
-        @_grabbed.classList.remove(@_bem('sortable-ghost'))
+        @_grabbed.classList.remove(@_bem('mh-sortable-ghost'))
         @_grabbed = null
         @_grabbedOffset = null
 
@@ -251,7 +251,7 @@ class Sortable
 
             # Add the ghost class to the grabbed child to change its appearance
             # within the list.
-            @_grabbed.classList.add(@_bem('sortable-ghost'))
+            @_grabbed.classList.add(@_bem('mh-sortable-ghost'))
 
             # Add a class to the container to indicate that the user is sorting
             # the list.
@@ -324,7 +324,7 @@ class Sortable
         grabber:
             'selector': (sortable, elm) ->
                 # Select grabber element using a CSS selector
-                return $.many(sortable.grabSelector, elm)
+                return $.one(sortable.grabSelector, elm)
 
             'self': (sortable, elm) ->
                 # Return the element itself
@@ -357,7 +357,7 @@ class Sortable
                 cloned.style['pointer-events'] = 'none'
 
                 # Add a helper class to the clone
-                cloned.classList.add(sortable._bem('sortable-helper'))
+                cloned.classList.add(sortable._bem('mh-sortable-helper'))
 
                 return cloned
 
