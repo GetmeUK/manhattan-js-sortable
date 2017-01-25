@@ -67,7 +67,7 @@ class Sortable
         @_dom.container.__mh_sortable = this
 
         # Add a sortable class to the container
-        @_dom.container.classList.add(@_bem('sortable'))
+        @_dom.container.classList.add(@_bem('mh-sortable'))
 
         # Define read-only properties
         Object.defineProperty(this, 'container', {value: @_dom.container})
@@ -95,7 +95,7 @@ class Sortable
         # Remove the sortable behaviour from the container
 
         # Remove the sortable class from the container
-        @container.classList.remove(@_bem('sortable'))
+        @container.classList.remove(@_bem('mh-sortable'))
 
         # Remove event handlers
         $.ignore document,
@@ -175,7 +175,7 @@ class Sortable
         before = @constructor.behaviours.before[@_behaviours.before]
         before = before(this, sibling, pos)
         @container.removeChild(@_grabbed)
-        if before
+        if not before
             sibling = sibling.nextElementSibling
         @container.insertBefore(@_grabbed, sibling)
 
@@ -203,7 +203,7 @@ class Sortable
         @_dom.helper = null
 
         # Remove the sorting class from the container
-        @container.classList.remove(@_bem('sortable', null, 'sorting'))
+        @container.classList.remove(@_bem('mh-sortable', null, 'sorting'))
 
         # Dispatch a sorted event
         $.dispatch(@container, @_et('sorted'), {'children': @_dom.children})
@@ -255,7 +255,7 @@ class Sortable
 
             # Add a class to the container to indicate that the user is sorting
             # the list.
-            @container.classList.add(@_bem('sortable', null, 'sorting'))
+            @container.classList.add(@_bem('mh-sortable', null, 'sorting'))
 
             # Dispatch grabbed event
             $.dispatch(@container, @_et('grabbed'), {'target': grabbed})
@@ -303,8 +303,8 @@ class Sortable
                 rect = sibling.getBoundingClientRect()
                 overlap = [pos[0] - rect.left, pos[1] - rect.top]
                 if sortable.axis is 'vertical'
-                    return overlap[1] > (rect.height / 2)
-                return overlap[0] > (rect.width / 2)
+                    return overlap[1] < (rect.height / 2)
+                return overlap[0] < (rect.width / 2)
 
         # The `children` behaviour is used to select the elements within the
         # `container` that will be sortable. Must return a list of DOM elements.
@@ -312,7 +312,7 @@ class Sortable
             'children': (sortable) ->
                 # Select all child elements of the container
                 children = sortable.container.childNodes
-                elementType = Node.ELEMENT_NODE
+                elementType = 1 # (Node.ELEMENT_NODE)
                 return (e for e in children when e.nodeType is elementType)
 
             'selector': (sortable) ->
@@ -363,5 +363,3 @@ class Sortable
 
 
 module.exports = {Sortable: Sortable}
-
-# Position behaviour (autoaxis, axis by default)
