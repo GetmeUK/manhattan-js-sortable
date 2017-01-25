@@ -218,11 +218,126 @@ describe 'Sortable (behaviors)', ->
 
         describe 'auto', ->
 
-            # @@
+            beforeEach ->
+
+                # Provide a width for the container
+                sortable.container.getBoundingClientRect = ()->
+                    return {width: 100}
+
+                # Set the axis option to an invalid value
+                sortable.axis = 'unknown'
+
+                # Set up a spy for the axis behaviour
+                sinon.spy(Sortable.behaviours.before, 'axis')
+
+            afterEach ->
+                # Restore the axis behaviour
+                Sortable.behaviours.before.axis.restore()
+
+            describe 'when children are listed vertically',
+
+                it 'should set the axis option to vertical', ->
+
+                    _getBoundingRect = (i) ->
+                        return () -> return {top: i * 10}
+
+                    for li, i in listItems
+                        li.getBoundingClientRect = _getBoundingRect(i)
+
+                    Sortable.behaviours.before.auto(
+                        sortable,
+                        listItems[0],
+                        [0, 0]
+                        )
+                    sortable.axis.should.equal 'vertical'
+
+            describe 'when children are listed horizontally',
+
+                it 'should set the axis option to horizontal', ->
+
+                    for li, i in listItems
+                        li.getBoundingClientRect = () -> return {top: 0}
+
+                    Sortable.behaviours.before.auto(
+                        sortable,
+                        listItems[0],
+                        [0, 0]
+                        )
+                    sortable.axis.should.equal 'horizontal'
+
+            it 'should call the before > axis behaviour', ->
+
+                for li, i in listItems
+                    li.getBoundingClientRect = () -> return {top: 0}
+
+                pos = [0, 0]
+                Sortable.behaviours.before.auto(sortable, listItems[0], pos)
+
+                axis = Sortable.behaviours.before.axis
+                axis.should.have.been.calledWith(sortable, listItems[0], pos)
 
         describe 'axis', ->
 
-            # @@
+            li = null
+
+            beforeEach ->
+                li = listItems[0]
+                li.getBoundingClientRect = ->
+                    return {
+                        bottom: 20,
+                        height: 20,
+                        left: 0,
+                        right: 100,
+                        top: 0,
+                        width: 100
+                        }
+
+            describe 'when axis option is vertical', ->
+
+                it 'should return true if the y position is less than half the
+                    height of the sibling', ->
+
+                    sortable.axis = 'vertical'
+
+                    # Before
+                    before = Sortable.behaviours.before.axis(
+                        sortable,
+                        li,
+                        [0, 5]
+                        )
+                    before.should.be.true
+
+                    # After
+                    before = Sortable.behaviours.before.axis(
+                        sortable,
+                        li,
+                        [0, 15]
+                        )
+                    before.should.be.false
+
+            describe 'when axis option is horizontal', ->
+
+                it 'should return true if the x position is less than half the
+                    width of the sibling', ->
+
+                    sortable.axis = 'horizontal'
+
+                    # Before
+                    before = Sortable.behaviours.before.axis(
+                        sortable,
+                        li,
+                        [10, 0]
+                        )
+                    before.should.be.true
+
+                    # After
+                    before = Sortable.behaviours.before.axis(
+                        sortable,
+                        li,
+                        [55, 0]
+                        )
+                    before.should.be.false
+
 
     describe 'children', ->
 

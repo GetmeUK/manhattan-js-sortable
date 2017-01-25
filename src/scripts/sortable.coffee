@@ -71,6 +71,9 @@ class Sortable
 
         # Define read-only properties
         Object.defineProperty(this, 'container', {value: @_dom.container})
+        Object.defineProperty(this, 'children', {
+            get: () => return (c for c in @_dom.children)
+        })
 
         # Select the container's sortable children
         children = @constructor.behaviours.children[@_behaviours.children]
@@ -275,7 +278,7 @@ class Sortable
                 # Has the container width changed since we last called this
                 # behaviour?
                 width = sortable.container.getBoundingClientRect().width
-                unless @_containerWidth is width
+                unless sortable._containerWidth is width
 
                     # Width has changed, attempt to detect the correct axis
                     sortable.axis = 'vertical'
@@ -285,13 +288,14 @@ class Sortable
                     topTable = {}
                     for child in sortable._dom.children
                         top = child.getBoundingClientRect().top
+
                         if topTable[top]
                             sortable.axis = 'horizontal'
                             break
                         topTable[top] = true
 
                     # Store new container width
-                    @_containerWidth = width
+                    sortable._containerWidth = width
 
                 axis = sortable.constructor.behaviours.before['axis']
                 return axis(sortable, sibling, pos)
