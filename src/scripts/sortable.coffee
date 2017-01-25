@@ -161,6 +161,9 @@ class Sortable
         # Is the pointer over sibling of the grabbed element?
         target = document.elementFromPoint(pos[0], pos[1])
         sibling = null
+
+        console.log target
+
         for child in @_dom.children
 
             # Ignore the currently grabbed item
@@ -216,7 +219,7 @@ class Sortable
 
         # If this is a mouse down event then we check that the user pressed the
         # primary mouse button (left).
-        if event.type.toLowerCase() is 'mousedown' and not (event.which is 1)
+        if ev.type.toLowerCase() is 'mousedown' and not (ev.which is 1)
             return
 
         # Determine if the target of the event relates to the grabber for a
@@ -261,7 +264,7 @@ class Sortable
             @container.classList.add(@_bem('mh-sortable', null, 'sorting'))
 
             # Dispatch grabbed event
-            $.dispatch(@container, @_et('grabbed'), {'target': grabbed})
+            $.dispatch(@container, @_et('grabbed'), {'child': grabbed})
 
     # Behaviours
 

@@ -234,7 +234,7 @@ describe 'Sortable (behaviors)', ->
                 # Restore the axis behaviour
                 Sortable.behaviours.before.axis.restore()
 
-            describe 'when children are listed vertically',
+            describe 'when children are listed vertically', ->
 
                 it 'should set the axis option to vertical', ->
 
@@ -251,7 +251,7 @@ describe 'Sortable (behaviors)', ->
                         )
                     sortable.axis.should.equal 'vertical'
 
-            describe 'when children are listed horizontally',
+            describe 'when children are listed horizontally', ->
 
                 it 'should set the axis option to horizontal', ->
 
@@ -406,3 +406,156 @@ describe 'Sortable (behaviors)', ->
 
                 # Add a helper class to the clone
                 clone.classList.contains('mh-sortable-helper').should.be.true
+
+
+describe 'Sortable (user interactions)', ->
+
+    jsdom()
+
+    list = null
+    listItems = null
+    sortable = null
+
+    beforeEach ->
+        # Build a list to sort
+        list = $.create('ul', {'data-mh-sortable': true})
+        listItems = []
+        for language in languages
+            listItem = $.create('ul', {})
+            listItem.innerText = language
+            listItems.push(listItem)
+            list.appendChild(listItem)
+
+        document.body.appendChild(list)
+
+        # Make the list sortable
+        sortable = new Sortable(list)
+
+        # Set up bounding client information for the container and all sortable
+        # items.
+        list.getBoundingClientRect = () -> return {
+                bottom: 1000,
+                height: 1000,
+                left: 0,
+                right: 1000,
+                top: 0,
+                width: 1000
+                }
+
+        _getBoundingRect = (i) ->
+            return () -> return {
+                bottom: (i * 10) + 20,
+                height: 20,
+                left: 0,
+                right: 100,
+                top: i * 10,
+                width: 100
+                }
+
+        for li, i in listItems
+            li.getBoundingClientRect = _getBoundingRect(i)
+
+        # Set up the `elementFromPoint` behaviour for the document to always
+        # return the second item in the list.
+        document.elementFromPoint = (x, y) ->
+            return listItems[1]
+
+    afterEach ->
+        sortable.destroy()
+        document.body.removeChild(list)
+
+    describe 'grabbing an item to move', ->
+
+        it 'should dispatch a grabbed event against the container', ->
+
+            listener = sinon.spy()
+            list.addEventListener('mh-sortable--grabbed', listener)
+
+            $.dispatch(
+                listItems[0],
+                'mousedown',
+                {pageX: 5, pageY: 5, which: 1}
+                )
+
+            listener.should.have.been.calledOn list
+
+            ev = listener.args[0][0]
+            ev.child.should.equal listItems[0]
+
+    describe 'moving an item to a new position', ->
+
+        it 'should dispatch a sort event against the container', ->
+
+            listener = sinon.spy()
+            list.addEventListener('mh-sortable--sort', listener)
+
+            # Grab the element
+            $.dispatch(
+                listItems[0],
+                'mousedown',
+                {pageX: 5, pageY: 5, which: 1}
+                )
+
+            # Move the element to a new position in the list
+            $.dispatch(
+                document,
+                'mousemove',
+                {pageX: 5, pageY: 35, which: 1}
+                )
+
+            listener.should.have.been.calledOn list
+
+            ev = listener.args[0][0]
+            ev.children.should.deep.equal [
+                    listItems[1],
+                    listItems[0],
+                    listItems[2],
+                    listItems[3],
+                    listItems[4],
+                    listItems[5],
+                    listItems[6],
+                    listItems[7],
+                    listItems[8]
+                ]
+
+    describe 'dropping an item in a new position', ->
+
+        it 'should dispatch a sorted event against the container', ->
+
+            listener = sinon.spy()
+            list.addEventListener('mh-sortable--sorted', listener)
+
+            # Grab the element
+            $.dispatch(
+                listItems[0],
+                'mousedown',
+                {pageX: 5, pageY: 5, which: 1}
+                )
+
+            # Move the element to a new position in the list
+            $.dispatch(
+                document,
+                'mousemove',
+                {pageX: 5, pageY: 35, which: 1}
+                )
+
+            # Drop the element in its new new position in the list
+            $.dispatch(
+                document,
+                'mouseup'
+                )
+
+            listener.should.have.been.calledOn list
+
+            ev = listener.args[0][0]
+            ev.children.should.deep.equal [
+                    listItems[1],
+                    listItems[0],
+                    listItems[2],
+                    listItems[3],
+                    listItems[4],
+                    listItems[5],
+                    listItems[6],
+                    listItems[7],
+                    listItems[8]
+                ]
