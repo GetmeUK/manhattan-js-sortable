@@ -155,15 +155,13 @@ class Sortable
         pos = @_getEventPos(ev)
 
         # Move the helper inline with the pointer
-        @_dom.helper.style.left = "#{pos[0] - @_grabbedOffset[0]}px"
-        @_dom.helper.style.top = "#{pos[1] - @_grabbedOffset[1]}px"
+        offset = [window.pageXOffset, window.pageYOffset]
+        @_dom.helper.style.left = "#{offset[0] + pos[0] - @_grabbedOffset[0]}px"
+        @_dom.helper.style.top = "#{offset[1] + pos[1] - @_grabbedOffset[1]}px"
 
         # Is the pointer over sibling of the grabbed element?
         target = document.elementFromPoint(pos[0], pos[1])
         sibling = null
-
-        console.log target
-
         for child in @_dom.children
 
             # Ignore the currently grabbed item

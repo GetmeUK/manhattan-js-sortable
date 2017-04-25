@@ -1,6 +1,6 @@
 {
   "name": "manhattan-sortable",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Support for sorting DOM elements via drag'n'drop.",
   "main": "dist/index.js",
   "scripts": {
