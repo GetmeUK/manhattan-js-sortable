@@ -1,0 +1,13 @@
+.mh-sortable-ghost {
+  background: #f8f8f8 !important;
+  color: rgba(0, 0, 0, 0.6) !important; }
+
+.mh-sortable * {
+  cursor: -moz-grab;
+  cursor: -webkit-grab;
+  cursor: grab; }
+
+.mh-sortable--sorting * {
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
+  cursor: grabbing; }
