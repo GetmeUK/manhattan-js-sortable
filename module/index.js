@@ -52,11 +52,8 @@ export class Sortable {
             prefix
         )
 
-        // The element that is currently being sorted
-        this._grabbed = null
-
-        // The offset at which grabbed element was grabbed
-        this._grabbedOffset
+        // The offset at which the currently grabbed element was grabbed
+        this._grabbedOffset = null
 
         // Domain for related DOM elements
         this._dom = {}
@@ -79,7 +76,7 @@ export class Sortable {
     }
 
     get grabbed() {
-        return this.grabbed
+        return this._dom._grabbed
     }
 
     // -- Public methods --
@@ -90,8 +87,8 @@ export class Sortable {
     destroy() {
 
         // Remove sorting class
-        this._dom.container.classList.remove(this.constructor.css['sortable'])
-        this._dom.container.classList.remove(this.constructor.css['sorting'])
+        this.container.classList.remove(this.constructor.css['sortable'])
+        this.container.classList.remove(this.constructor.css['sorting'])
 
         // Remove event handlers
         $.ignore(
@@ -116,7 +113,7 @@ export class Sortable {
     init() {
 
         // Add the sortable class to the container
-        this._dom.container.classList.add(this.constructor.css['sortable'])
+        this.container.classList.add(this.constructor.css['sortable'])
 
         // Set up event listeners
         $.listen(
@@ -152,6 +149,7 @@ export class Sortable {
      * Drag an element to a new position within its siblings.
      */
     _drag(event) {
+        const cls = this.constructor
 
         // Ignore the event if an element hasn't been grabbed to sort
         if (this.grabbed === null) {
@@ -174,7 +172,7 @@ export class Sortable {
         let sibling = null
 
         for (let child of this.children) {
-            if (child !== this._grabbed && child.contains(target)) {
+            if (child !== this.grabbed && child.contains(target)) {
                 sibling = child
                 break
             }
@@ -186,25 +184,106 @@ export class Sortable {
         }
 
         // Moved the grabbed element into its new position within its siblings
-        let
+        let before = cls.behaviours.place[this._behaviours](
+            this,
+            sibling,
+            position
+        )
+        if (!before) {
+            sibling = sibling.nextElementSibling
+        }
+        this.container,insertBefore(this.grabbed, sibling)
 
-
+        // Dispatch sort event
+        $.dispatch(this.container, 'sort', {'children': this.children})
     }
 
     /**
      * Drop an element into a new position within its siblings.
      */
     _drop(event) {
+        const cls = this.constructor
 
+        // Ignore the event if an element hasn't been grabbed to sort
+        if (this.grabbed === null) {
+            return
+        }
+
+        // Remove the ghost class from the grabbed element
+        this.grabbed.classList.remove(cls.css['ghost'])
+        this._dom._grabbed = null
+        this._grabbedOffset = null
+
+        // Remove the helper element
+        document.body.removeChild(this._dom.helper)
+        delete this._dom['helper']
+
+        // Remove the sorting class from the container
+        this.container.classList.remove(cls.css['sorting'])
+
+        // Dispatch sorted event
+        $.dispatch(this.container, 'sorted', {'children': this.children})
     }
 
     /**
      * Grab an element to sort.
      */
     _grab(event) {
+        const cls = this.constructor
 
-        // @@ Add the helper CSS class to the helper
-        // clone.classList.add(inst.constructor.css['helper'])
+        // Check the event is using the primary mouse button (if the event
+        // was trigger by a mouse).
+        if (event.type.toLowerCase() === 'mousedown' && event.which !== 1) {
+            return
+        }
+
+        // Check if the event relates to the grabber for a sortable element
+        const grabber = cls.behaviours.grabber[this._behaviours.grabber]
+        let grabbed = null
+        for (let child of this.children) {
+            if (grabber(this, child).contains(ev.target)) {
+                grabbed = child
+                break
+            }
+        }
+
+        // If no element was grabbed there's nothing more to do
+        if (grabbed === null) {
+            return
+        }
+
+        // Cancel any default interaction
+        event.preventDefault()
+
+        // Set the grabbed element and its offset to the pointer
+        const position = this._getEventPos(event)
+        const rect = grabbed.getBoundingClientRect()
+        this._dom._grabbed = grabbed
+        this._grabbedOffset = [
+            position[0] - rect.left,
+            position[1] - rect.top
+        ]
+
+        // Create a helper element to represent the grabbed element being
+        // dragged.
+        this._dom.helper = cls.behaviours.helper[this._behaviours.helper](
+            this,
+            this.grabbed
+        )
+        const leftPx = position[0] - this._grabbedOffset[0]
+        const topPx = position[1] - this._grabbedOffset[1]
+        this._dom.helper.style.left = `${leftPx}px`
+        this._dom.helper.style.top = `${topPx}px`
+        this._dom.helper.classList.add(cls.css['helper'])
+
+        // Add ghost class to the grabbed element
+        this.grabbed.add(cls.css['ghost'])
+
+        // Add sorting class to the container
+        this.container.classList.add(cls.css['sorting'])
+
+        // Dispatch grabbed event
+        $.dispatch(this.container, 'grabbed', {'grabbed': this.grabbed})
     }
 }
 
@@ -346,6 +425,11 @@ CharacterCount.behaviours = {
 // -- CSS classes --
 
 CharacterCount.css = {
+
+    /**
+     * Applied to the element being sorted.
+     */
+    'ghost': 'mh-sortable-ghost',
 
     /**
      * Applied to helper element.
