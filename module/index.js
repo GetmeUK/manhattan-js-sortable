@@ -1,6 +1,23 @@
 import * as $ from 'manhattan-essentials'
 
 
+// -- Utils --
+
+/**
+ * Return the `[x, y]` position of an event.
+ */
+function getEventPosition(event) {
+    let _event = event
+    if (event.touches) {
+        _event = event.touches
+    }
+    return [
+        event.pageX - window.pageXOffset,
+        event.pageY - window.pageYOffset
+    ]
+}
+
+
 // -- Class definition --
 
 /**
@@ -32,7 +49,7 @@ export class Sortable {
                 'grabSelector': null
             },
             options,
-            input,
+            container,
             prefix
         )
 
@@ -48,7 +65,7 @@ export class Sortable {
                 'place': 'auto'
             },
             options,
-            input,
+            container,
             prefix
         )
 
@@ -132,20 +149,6 @@ export class Sortable {
     // -- Private methods --
 
     /**
-     * Return the `[x, y]` position of an event.
-     */
-    _getEventPosition(event) {
-        let _event = event
-        if (event.touches) {
-            _event = event.touches
-        }
-        return [
-            ev.pageX - window.pageXOffset,
-            ev.pageY - window.pageYOffset
-        ]
-    }
-
-    /**
      * Drag an element to a new position within its siblings.
      */
     _drag(event) {
@@ -157,7 +160,7 @@ export class Sortable {
         }
 
         // Move the helper inline with the pointer
-        const position = this._getEventPosition(event)
+        const position = getEventPosition(event)
         const offset = [
             window.pageXOffset,
             window.pageYOffset
@@ -165,7 +168,7 @@ export class Sortable {
         const leftPx = offset[0] + position[0] - this._grabbedOffset[0]
         const topPx = offset[1] + position[1] - this._grabbedOffset[1]
         this._dom.helper.style.left = `${leftPx}px`
-        this._dom.helper.style.top = `${topPX}px`
+        this._dom.helper.style.top = `${topPx}px`
 
         // Check if the pointer is over a sibling of the grabbed element
         const target = document.elementFromPoint(position[0], position[1])
@@ -192,7 +195,7 @@ export class Sortable {
         if (!before) {
             sibling = sibling.nextElementSibling
         }
-        this.container,insertBefore(this.grabbed, sibling)
+        this.container.insertBefore(this.grabbed, sibling)
 
         // Dispatch sort event
         $.dispatch(this.container, 'sort', {'children': this.children})
@@ -241,7 +244,7 @@ export class Sortable {
         const grabber = cls.behaviours.grabber[this._behaviours.grabber]
         let grabbed = null
         for (let child of this.children) {
-            if (grabber(this, child).contains(ev.target)) {
+            if (grabber(this, child).contains(event.target)) {
                 grabbed = child
                 break
             }
@@ -256,7 +259,7 @@ export class Sortable {
         event.preventDefault()
 
         // Set the grabbed element and its offset to the pointer
-        const position = this._getEventPos(event)
+        const position = getEventPosition(event)
         const rect = grabbed.getBoundingClientRect()
         this._dom._grabbed = grabbed
         this._grabbedOffset = [
@@ -290,7 +293,7 @@ export class Sortable {
 
 // -- Behaviours --
 
-CharacterCount.behaviours = {
+Sortable.behaviours = {
 
     /**
      * The `children` behaviour is used to select the elements within the
@@ -303,9 +306,9 @@ CharacterCount.behaviours = {
          */
         'children': (inst) => {
             const children = inst.container.childNodes
-            return [
-                for (e of children) if (e.nodeType === Node.ELEMENT_NODE) e
-            ]
+            return children.filter((e) => {
+                return e.nodeType === Node.ELEMENT_NODE
+            })
         },
 
         /**
@@ -350,7 +353,7 @@ CharacterCount.behaviours = {
          * Returns a cloned version of the element.
          */
         'clone': (inst, element) => {
-            const clone = elm.cloneNode(true)
+            const clone = element.cloneNode(true)
 
             // Remove id attribute to avoid unwanted duplicates
             clone.removeAttribute('id')
@@ -386,7 +389,7 @@ CharacterCount.behaviours = {
             // we switch the axis to sort horizontally.
             const tops = {}
             for (let child of inst._dom.children) {
-                let top = child.getBoundingClientRect().top
+                let {top} = child.getBoundingClientRect()
                 if (top in tops) {
                     inst._options.axis = 'horizontal'
                     break
@@ -424,7 +427,7 @@ CharacterCount.behaviours = {
 
 // -- CSS classes --
 
-CharacterCount.css = {
+Sortable.css = {
 
     /**
      * Applied to the element being sorted.

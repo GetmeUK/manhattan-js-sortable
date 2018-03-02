@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <title>manhattan-sortable</title>
+    </head>
+    <body>
+
+        <ul
+            id="languages"
+            data-mh-sortable
+            >
+            <li>Ada</li>
+            <li>Java</li>
+            <li>JavaScript</li>
+            <li>Brainfuck</li>
+            <li>LOLCODE</li>
+            <li>Node.js</li>
+            <li>Ruby on Rails</li>
+        </ul>
+
+        <script src="../node_modules/manhattan-essentials/umd/index.js"></script>
+        <script src="../umd/index.js"></script>
+        <script>
+
+            const $ = window['manhattan-essentials']
+            const Sortable = window['manhattan-sortable'].Sortable
+
+        </script>
+    </body>
+</html>
