@@ -1,0 +1,17 @@
+.mh-sortable * {
+    cursor: grab;
+    user-select: none;
+
+    &--sorting * {
+        cursor: grabbing;
+    }
+}
+
+.mh-sortable-ghost {
+    background: #f8f8f8 !important;
+    color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.mh-sortable-helper {
+
+}

@@ -2,6 +2,53 @@
 <html lang="en">
     <head>
         <title>manhattan-sortable</title>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="sortable.css"
+            >
+        <style>
+#languages {
+    background: #fff;
+    left: 100px;
+    margin: 0;
+    padding: 5px 0;
+    position: absolute;
+    top: 100px;
+    width: 200px;
+}
+
+#languages li {
+    background: #fff;
+    border: 1px solid #eee;
+    font-family: sans-serif;
+    list-style: none;
+    margin: 0 0 4px 0;
+    padding: 5px 10px;
+}
+
+#users {
+    background: #fff;
+    left: 400px;
+    margin: 0;
+    padding: 5px;
+    position: absolute;
+    top: 100px;
+    width: 400px;
+}
+
+#users li {
+    background: #fff;
+    border: 1px solid #eee;
+    float: left;
+    font-family: sans-serif;
+    height: 100px;
+    list-style: none;
+    margin: 2px;
+    padding: 5px 10px;
+    width: 100px;
+}
+        </style>
     </head>
     <body>
 
@@ -18,12 +65,34 @@
             <li>Ruby on Rails</li>
         </ul>
 
+        <ul
+            id="users"
+            data-mh-sortable
+            data-mh-sortable--grabber="selector"
+            data-mh-sortable--grab-selector=".grab"
+            >
+            <li><span class="grab">grab</span><br>Al</li>
+            <li><span class="grab">grab</span><br>Andy</li>
+            <li><span class="grab">grab</span><br>Ant</li>
+            <li><span class="grab">grab</span><br>avid</li>
+            <li><span class="grab">grab</span><br>John</li>
+            <li><span class="grab">grab</span><br>Jon</li>
+            <li><span class="grab">grab</span><br>Rich</li>
+            <li><span class="grab">grab</span><br>Ross</li>
+        </ul>
+
         <script src="../node_modules/manhattan-essentials/umd/index.js"></script>
         <script src="../umd/index.js"></script>
         <script>
 
             const $ = window['manhattan-essentials']
             const Sortable = window['manhattan-sortable'].Sortable
+
+            sortable = new Sortable($.one('#languages'))
+            sortable.init()
+
+            sortable = new Sortable($.one('#users'))
+            sortable.init()
 
         </script>
     </body>

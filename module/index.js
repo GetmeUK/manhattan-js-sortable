@@ -73,12 +73,22 @@ export class Sortable {
         this._grabbedOffset = null
 
         // Domain for related DOM elements
-        this._dom = {}
+        this._dom = {
+            'grabbed': null,
+            'helper': null
+        }
 
         // Store a reference to the container (we also store a reverse
         // reference to this instance against the container).
         this._dom.container = container
         this._dom.container._mhSortable = this
+
+        // Domain for handlers
+        this._handlers = {
+            'drag': (event) => { this._drag(event) },
+            'drop': (event) => { this._drop(event) },
+            'grab': (event) => { this._grab(event) }
+        }
     }
 
     // -- Getters & Setters --
@@ -93,7 +103,7 @@ export class Sortable {
     }
 
     get grabbed() {
-        return this._dom._grabbed
+        return this._dom.grabbed
     }
 
     // -- Public methods --
@@ -111,12 +121,12 @@ export class Sortable {
         $.ignore(
             document,
             {
-                'mousedown': this._grab,
-                'mousemove': this._drag,
-                'mouseup': this._drop,
-                'touchstart': this._grab,
-                'touchmove': this._drag,
-                'touchend': this._drop
+                'mousedown': this._handlers.grab,
+                'mousemove': this._handlers.drag,
+                'mouseup': this._handlers.drop,
+                'touchstart': this._handlers.grab,
+                'touchmove': this._handlers.drag,
+                'touchend': this._handlers.drop
             }
         )
 
@@ -136,12 +146,12 @@ export class Sortable {
         $.listen(
             document,
             {
-                'mousedown': this._grab,
-                'mousemove': this._drag,
-                'mouseup': this._drop,
-                'touchstart': this._grab,
-                'touchmove': this._drag,
-                'touchend': this._drop
+                'mousedown': this._handlers.grab,
+                'mousemove': this._handlers.drag,
+                'mouseup': this._handlers.drop,
+                'touchstart': this._handlers.grab,
+                'touchmove': this._handlers.drag,
+                'touchend': this._handlers.drop
             }
         )
     }
@@ -187,11 +197,12 @@ export class Sortable {
         }
 
         // Moved the grabbed element into its new position within its siblings
-        let before = cls.behaviours.place[this._behaviours](
+        let before = cls.behaviours.place[this._behaviours.place](
             this,
             sibling,
             position
         )
+
         if (!before) {
             sibling = sibling.nextElementSibling
         }
@@ -214,7 +225,7 @@ export class Sortable {
 
         // Remove the ghost class from the grabbed element
         this.grabbed.classList.remove(cls.css['ghost'])
-        this._dom._grabbed = null
+        this._dom.grabbed = null
         this._grabbedOffset = null
 
         // Remove the helper element
@@ -261,7 +272,7 @@ export class Sortable {
         // Set the grabbed element and its offset to the pointer
         const position = getEventPosition(event)
         const rect = grabbed.getBoundingClientRect()
-        this._dom._grabbed = grabbed
+        this._dom.grabbed = grabbed
         this._grabbedOffset = [
             position[0] - rect.left,
             position[1] - rect.top
@@ -278,9 +289,10 @@ export class Sortable {
         this._dom.helper.style.left = `${leftPx}px`
         this._dom.helper.style.top = `${topPx}px`
         this._dom.helper.classList.add(cls.css['helper'])
+        document.body.appendChild(this._dom.helper)
 
         // Add ghost class to the grabbed element
-        this.grabbed.add(cls.css['ghost'])
+        this.grabbed.classList.add(cls.css['ghost'])
 
         // Add sorting class to the container
         this.container.classList.add(cls.css['sorting'])
@@ -305,7 +317,7 @@ Sortable.behaviours = {
          * Select all child elements of the container.
          */
         'children': (inst) => {
-            const children = inst.container.childNodes
+            const children = [... inst.container.childNodes]
             return children.filter((e) => {
                 return e.nodeType === Node.ELEMENT_NODE
             })
@@ -365,6 +377,8 @@ Sortable.behaviours = {
             // behave as a helper.
             clone.style['position'] = 'absolute'
             clone.style['pointer-events'] = 'none'
+
+            return clone
         }
 
     },
@@ -388,7 +402,7 @@ Sortable.behaviours = {
             // If any of the sortable children have the same vertical position
             // we switch the axis to sort horizontally.
             const tops = {}
-            for (let child of inst._dom.children) {
+            for (let child of inst.children) {
                 let {top} = child.getBoundingClientRect()
                 if (top in tops) {
                     inst._options.axis = 'horizontal'
@@ -397,7 +411,7 @@ Sortable.behaviours = {
                 tops[top] = true
             }
 
-            return inst.constructor.behaviours['axis'](
+            return inst.constructor.behaviours.place.axis(
                 inst,
                 sibling,
                 position
@@ -415,7 +429,8 @@ Sortable.behaviours = {
                 position[0] - rect.left,
                 position[1] - rect.top
             ]
-            if (inst.axis === 'vertical') {
+
+            if (inst._options.axis === 'vertical') {
                 return overlap[1] < (rect.height / 2)
             }
             return overlap[0] < (rect.width / 2)

@@ -1,0 +1,9 @@
+.mh-sortable * {
+  cursor: grab;
+  user-select: none; }
+  .mh-sortable *--sorting * {
+    cursor: grabbing; }
+
+.mh-sortable-ghost {
+  background: #f8f8f8 !important;
+  color: rgba(0, 0, 0, 0.6) !important; }
