@@ -6,3 +6,4 @@ const {document} = (new JSDOM('')).window
 
 global.window = window
 global.document = document
+global.Node = {'ELEMENT_NODE': 1}

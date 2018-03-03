@@ -9,11 +9,11 @@ import * as $ from 'manhattan-essentials'
 function getEventPosition(event) {
     let _event = event
     if (event.touches) {
-        _event = event.touches
+        [_event] = event.touches
     }
     return [
-        event.pageX - window.pageXOffset,
-        event.pageY - window.pageYOffset
+        _event.pageX - window.pageXOffset,
+        _event.pageY - window.pageYOffset
     ]
 }
 
@@ -85,9 +85,15 @@ export class Sortable {
 
         // Domain for handlers
         this._handlers = {
-            'drag': (event) => { this._drag(event) },
-            'drop': (event) => { this._drop(event) },
-            'grab': (event) => { this._grab(event) }
+            'drag': (event) => {
+                this._drag(event)
+            },
+            'drop': (event) => {
+                this._drop(event)
+            },
+            'grab': (event) => {
+                this._grab(event)
+            }
         }
     }
 
@@ -131,7 +137,7 @@ export class Sortable {
         )
 
         // Remove the sortable reference from the container
-        delete this._dom.input._mhSortable
+        delete this._dom.container._mhSortable
     }
 
     /**
@@ -317,7 +323,7 @@ Sortable.behaviours = {
          * Select all child elements of the container.
          */
         'children': (inst) => {
-            const children = [... inst.container.childNodes]
+            const children = [...inst.container.childNodes]
             return children.filter((e) => {
                 return e.nodeType === Node.ELEMENT_NODE
             })
