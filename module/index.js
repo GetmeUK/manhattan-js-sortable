@@ -99,6 +99,14 @@ export class Sortable {
 
     // -- Getters & Setters --
 
+    get axis() {
+        return this._options.axis
+    }
+
+    set axis(value) {
+        this._options.axis = value
+    }
+
     get children() {
         const cls = this.constructor
         return cls.behaviours.children[this._behaviours.children](this)
@@ -118,6 +126,11 @@ export class Sortable {
      * Remove the sortable.
      */
     destroy() {
+        // Remove helper element
+        if (this._dom.helper) {
+            document.body.removeChild(this._dom.helper)
+            delete this._dom.helper
+        }
 
         // Remove sorting class
         this.container.classList.remove(this.constructor.css['sortable'])
@@ -235,7 +248,7 @@ export class Sortable {
         this._grabbedOffset = null
 
         // Remove the helper element
-        document.body.removeChild(this._dom.helper)
+        this._dom.helper.parentNode.removeChild(this._dom.helper)
         delete this._dom['helper']
 
         // Remove the sorting class from the container
