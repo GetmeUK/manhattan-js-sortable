@@ -150,8 +150,7 @@ describe('Sortable', () => {
                     .be
                     .false
 
-                // Check the the events required for sorting are being
-                // listened for.
+                // Check the the events listeners have been removed
                 sinon.spy(sortable, '_drag')
                 sinon.spy(sortable, '_drop')
                 sinon.spy(sortable, '_grab')
