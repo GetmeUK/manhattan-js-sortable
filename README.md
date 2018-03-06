@@ -10,14 +10,14 @@
 
 ## Installation
 
-`npm install manhattan-sortable--save-dev`
+`npm install manhattan-sortable --save-dev`
 
 
 ## Usage
 
 ```JavaScript
 import * as $ from 'manhattan-essentials'
-import {Sortable} from 'manhattan-sortable' 
+import {Sortable} from 'manhattan-sortable'
 
 let sortable = Sortable(SomeListElement)
 sortable.init()
