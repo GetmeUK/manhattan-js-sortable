@@ -79,10 +79,8 @@ export class Sortable {
             'helper': null
         }
 
-        // Store a reference to the container (we also store a reverse
-        // reference to this instance against the container).
+        // Store a reference to the container
         this._dom.container = container
-        this._dom.container._mhSortable = this
 
         // Domain for handlers
         this._handlers = {
@@ -158,6 +156,8 @@ export class Sortable {
      * Initialize the sortable.
      */
     init() {
+        // Store a reference to the sortable instance against the container
+        this._dom.container._mhSortable = this
 
         // Add the sortable class to the container
         this.container.classList.add(this.constructor.css['sortable'])

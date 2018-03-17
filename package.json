@@ -1,6 +1,6 @@
 {
   "name": "manhattan-sortable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Drag and drop sorting for DOM elements.",
   "engines": {
     "node": ">=8.9.4"
