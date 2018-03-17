@@ -74,6 +74,7 @@ export class Sortable {
 
         // Domain for related DOM elements
         this._dom = {
+            'container': null,
             'grabbed': null,
             'helper': null
         }
