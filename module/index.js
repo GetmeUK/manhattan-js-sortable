@@ -250,7 +250,7 @@ export class Sortable {
 
         // Remove the helper element
         this._dom.helper.parentNode.removeChild(this._dom.helper)
-        delete this._dom['helper']
+        delete this._dom.helper
 
         // Remove the sorting class from the container
         this.container.classList.remove(cls.css['sorting'])
