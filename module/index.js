@@ -33,20 +33,28 @@ export class Sortable {
         $.config(
             this._options,
             {
-                // The axis used to determine the placement of a grabbed
-                // element when placed over a sibling. Must be 'vertical'
-                // (top/bottom) or 'horizontal' (left/right).
+
+                /**
+                 * The axis used to determine the placement of a grabbed
+                 * element when placed over a sibling. Must be 'vertical'
+                 * (top/bottom) or 'horizontal' (left/right).
+                 */
                 'axis': 'vertical',
 
-                // Used in conjunction with the `handle > children` behaviour
-                // to specify a CSS selector for the sortable children within
-                // the container.
+                /**
+                 * Used in conjunction with the `handle > children` behaviour
+                 * to specify a CSS selector for the sortable children within
+                 * the container.
+                 */
                 'childSelector': null,
 
-                // Used in conjuction with the `handle > grabber` behaviour to
-                // specify a CSS selector for the grabber element within a
-                // sortable child.
+                /**
+                 * Used in conjuction with the `handle > grabber` behaviour to
+                 * specify a CSS selector for the grabber element within a
+                 * sortable child.
+                 */
                 'grabSelector': null
+
             },
             options,
             container,
