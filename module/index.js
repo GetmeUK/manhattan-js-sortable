@@ -283,7 +283,8 @@ export class Sortable {
         const grabber = cls.behaviours.grabber[this._behaviours.grabber]
         let grabbed = null
         for (let child of this.children) {
-            if (grabber(this, child).contains(event.target)) {
+            const grabberElm = grabber(this, child)
+            if (grabberElm && grabberElm.contains(event.target)) {
                 grabbed = child
                 break
             }
