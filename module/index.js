@@ -300,6 +300,10 @@ export class Sortable {
 
         // Set the grabbed element and its offset to the pointer
         const position = getEventPosition(event)
+        const offset = [
+            window.pageXOffset,
+            window.pageYOffset
+        ]
         const rect = grabbed.getBoundingClientRect()
         this._dom.grabbed = grabbed
         this._grabbedOffset = [
@@ -313,8 +317,8 @@ export class Sortable {
             this,
             this.grabbed
         )
-        const leftPx = position[0] - this._grabbedOffset[0]
-        const topPx = position[1] - this._grabbedOffset[1]
+        const leftPx = offset[0] + position[0] - this._grabbedOffset[0]
+        const topPx = offset[1] + position[1] - this._grabbedOffset[1]
         this._dom.helper.style.left = `${leftPx}px`
         this._dom.helper.style.top = `${topPx}px`
         this._dom.helper.classList.add(cls.css['helper'])
